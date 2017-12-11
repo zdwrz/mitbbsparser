@@ -4,9 +4,11 @@ import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 import org.jsoup.select.Elements;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
+import javax.annotation.PostConstruct;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -18,13 +20,16 @@ public class HTMLParser {
     @Value("${mitbbs.base.url}")
     private String BASE_URL;
 
+    @Autowired
+    private ChannelParser channelParser;
     public static Map<String, String> docMap = new HashMap<>();
-    public HTMLParser(){
-        docMap.put("Military","https://www.mitbbs.com/bbsdoc/Military.html");
-        docMap.put("News","https://www.mitbbs.com/bbsdoc/USANews.html");
-        docMap.put("Stock","https://www.mitbbs.com/bbsdoc/Stock.html");
-        docMap.put("Auto","https://www.mitbbs.com/bbsdoc/Automobile.html");
-        docMap.put("Money","https://www.mitbbs.com/bbsdoc/Money.html");
+
+    @PostConstruct
+    public void init(){
+        List<MitbbsChannel> channels = channelParser.getAllChannel();
+        for (MitbbsChannel channel : channels) {
+            docMap.put(channel.getName(), channel.getUrl());
+        }
     }
     public MitbbsPage parseURLForPage(String url) {
         MitbbsPage page = new MitbbsPage();
@@ -85,7 +90,7 @@ public class HTMLParser {
     public MitbbsPage parseNameForPage(String name) {
         String url = docMap.get(name);
         if (url == null) {
-            throw new RuntimeException("cannot determine the page url.");
+            throw new RuntimeException("The name cannot be mapped to url");
         }
         return this.parseURLForPage(url);
     }

@@ -1,9 +1,8 @@
 package com.aweiz.mitbbs.mitbbsparser.controller;
 
-import com.aweiz.mitbbs.mitbbsparser.parser.HTMLParser;
-import com.aweiz.mitbbs.mitbbsparser.parser.MitbbsPage;
-import com.aweiz.mitbbs.mitbbsparser.parser.MitbbsThread;
-import com.aweiz.mitbbs.mitbbsparser.parser.XMLParser;
+import com.aweiz.mitbbs.mitbbsparser.parser.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
@@ -18,20 +17,21 @@ import java.util.Map;
 @RestController
 @RequestMapping("/mitbbs")
 public class MitbbsController {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MitbbsController.class);
+
     @Autowired
     HTMLParser parser;
 
     @Autowired
     XMLParser xmlParser;
 
-    @GetMapping("/page/{name}")
+    @Autowired
+    ChannelParser channelParser;
+
+    @GetMapping("/channel/{name}")
     public MitbbsPage getPage(@PathVariable String name) {
         return parser.parseNameForPage(name);
-    }
-
-    @GetMapping("/page")
-    public Map<String, String> getPage() {
-        return HTMLParser.docMap;
     }
 
     @GetMapping("/url")
@@ -40,8 +40,13 @@ public class MitbbsController {
     }
 
     @GetMapping("/top")
-    public List<MitbbsThread> getTop() throws IOException, SAXException, ParserConfigurationException {
+    public List<MitbbsThread> getTopThread() throws IOException, SAXException, ParserConfigurationException {
         return xmlParser.getTop();
+    }
+
+    @GetMapping("/channel")
+    public List<MitbbsChannel> getChannelRank(){
+        return channelParser.getAllChannel();
     }
 
     @ExceptionHandler(Exception.class)
@@ -49,7 +54,8 @@ public class MitbbsController {
     public Map<String,String> exceptionHandling(Exception e){
         Map<String, String> faultMap = new HashMap<>();
         faultMap.put("msg","Server Error");
-        faultMap.put("exception",e.getLocalizedMessage());
+        faultMap.put("exception",e.getMessage());
+        LOGGER.error("error",e);
         return faultMap;
     }
 }

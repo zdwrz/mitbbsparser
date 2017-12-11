@@ -1,9 +1,6 @@
 package com.aweiz.mitbbs.mitbbsparser;
 
-import com.aweiz.mitbbs.mitbbsparser.parser.HTMLParser;
-import com.aweiz.mitbbs.mitbbsparser.parser.MitbbsPage;
-import com.aweiz.mitbbs.mitbbsparser.parser.MitbbsThread;
-import com.aweiz.mitbbs.mitbbsparser.parser.XMLParser;
+import com.aweiz.mitbbs.mitbbsparser.parser.*;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -19,6 +16,7 @@ import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 @RunWith(SpringRunner.class)
 @SpringBootTest
@@ -28,6 +26,9 @@ public class MitbbsparserApplicationTests {
 
 	@Autowired
 	XMLParser xmlParser;
+
+	@Autowired
+	ChannelParser channelParser;
 
 	@Test
 	public void test() {
@@ -39,5 +40,12 @@ public class MitbbsparserApplicationTests {
 	@Test
 	public void testCharset() throws Exception {
 		xmlParser.getTop().stream().forEach(System.out::println);
+	}
+
+	@Test
+	public void testChannelParser(){
+		ChannelParser p = new ChannelParser();
+		List<MitbbsChannel> result = channelParser.getAllChannel();
+		result.stream().forEach(i-> System.out.println(i));
 	}
 }
