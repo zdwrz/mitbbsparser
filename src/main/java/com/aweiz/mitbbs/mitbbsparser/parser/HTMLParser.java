@@ -1,5 +1,9 @@
 package com.aweiz.mitbbs.mitbbsparser.parser;
 
+import com.aweiz.mitbbs.mitbbsparser.parser.thread.MitbbsPost;
+import com.aweiz.mitbbs.mitbbsparser.parser.thread.MitbbsThread;
+import com.aweiz.mitbbs.mitbbsparser.parser.thread.MitbbsThreadDetail;
+import org.apache.commons.text.StringEscapeUtils;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -10,20 +14,20 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.PostConstruct;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.UnsupportedEncodingException;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Component
 public class HTMLParser {
+
     @Value("${mitbbs.base.url}")
     private String BASE_URL;
 
     @Autowired
     private ChannelParser channelParser;
 
-    public static Map<String, String> docMap = new HashMap<>();
+    private Map<String, String> docMap = new ConcurrentHashMap<>();
 
     @PostConstruct
     public void init(){
@@ -61,13 +65,13 @@ public class HTMLParser {
 
         Elements next = e.nextAll("tr");   //All thread TR
         for (Element n : next) {
-            Element linkA = n.select("a[class='news1']").first();//Get the first a tag which is the link
+            Element linkA = n.select("a.news1").first();//Get the first a tag which is the link
             MitbbsThread newThread = new MitbbsThread();
             newThread.setTitle(linkA.text());
             newThread.setUrl(BASE_URL + linkA.attr("href"));
             threads.add(newThread);
 
-            Elements linkAs = n.select("a[class='news']");      //Get rest of the a tag which are author and updater
+            Elements linkAs = n.select("a.news");      //Get rest of the a tag which are author and updater
             if(linkAs.size() > 0) {
                 Element auth = linkAs.get(0);
                 newThread.setCreatedBy(auth.text());
@@ -95,5 +99,62 @@ public class HTMLParser {
             throw new RuntimeException("The name cannot be mapped to url");
         }
         return this.parseURLForPage(url);
+    }
+
+    public MitbbsThreadDetail getThreadDetail(String url) {
+        MitbbsThreadDetail detailPage = new MitbbsThreadDetail();
+        Document doc = null;
+        try {
+            doc = Jsoup.connect(url).get();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+        Element title = doc.select("span.jiatype16").first();
+        detailPage.setTitle(title.text());
+        detailPage.setInfo(doc.getElementsContainingOwnText("版面").first().text());
+        Elements posts = doc.select("td.jiawenzhang-type");
+        posts.stream().forEach(p-> {
+            processPost(detailPage, p);
+        });
+        return detailPage;
+    }
+
+    private void processPost(MitbbsThreadDetail detailPage, Element post) {
+        MitbbsPost newPost = new MitbbsPost();
+        Element textContent = post.getElementsByTag("p").first();
+        String tempStr = textContent.toString();
+        tempStr = tempStr.replaceAll("<p>","").replaceAll("</p>","").replaceAll("&nbsp;","");
+        String[] textContentArray = tempStr.split("<br>");
+        StringBuilder sb = new StringBuilder();
+        for(int i = 0 ; i < textContentArray.length ; i++) {
+            if(i > 2 && textContentArray[i].trim().equals("--")){ //ignore all the signatures
+                break;
+            }
+//            System.out.println(textContentArray[i]);
+            if (i == 0 && textContentArray[i].contains("发信人")) {
+                String author = textContentArray[i].replaceAll(",\\s+信区.+","");
+                author = author.replaceAll("发信人: ","");
+                newPost.setAuthor(author);
+            }
+            if(i == 1 && textContentArray[i].contains("标")){
+             //second line, ignored
+            }
+            if(i == 2 && textContentArray[i].contains("发信站")){
+                String time = textContentArray[i].replaceFirst(".+?\\(", "");
+                time = time.replace(")", "");
+                newPost.setTime(time);
+            }
+            if(i > 2) {
+                sb.append("\n");
+                sb.append(textContentArray[i].trim());
+            }
+        }
+        newPost.setContent(StringEscapeUtils.unescapeHtml4(sb.toString().trim()));
+        detailPage.addPost(newPost);
+    }
+
+    public Map<String, String> getDocMap() {
+        return docMap;
     }
 }

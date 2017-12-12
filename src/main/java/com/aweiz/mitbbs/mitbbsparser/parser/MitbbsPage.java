@@ -1,5 +1,7 @@
 package com.aweiz.mitbbs.mitbbsparser.parser;
 
+import com.aweiz.mitbbs.mitbbsparser.parser.thread.MitbbsThread;
+
 import java.util.List;
 
 public class MitbbsPage {

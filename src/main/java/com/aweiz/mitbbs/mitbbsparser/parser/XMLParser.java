@@ -1,5 +1,6 @@
 package com.aweiz.mitbbs.mitbbsparser.parser;
 
+import com.aweiz.mitbbs.mitbbsparser.parser.thread.MitbbsThread;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.w3c.dom.Document;
@@ -13,7 +14,6 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 import java.io.IOException;
 import java.net.HttpURLConnection;
-import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;

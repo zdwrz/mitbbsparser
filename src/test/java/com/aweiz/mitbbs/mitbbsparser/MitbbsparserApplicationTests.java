@@ -1,6 +1,7 @@
 package com.aweiz.mitbbs.mitbbsparser;
 
 import com.aweiz.mitbbs.mitbbsparser.parser.*;
+import com.aweiz.mitbbs.mitbbsparser.parser.thread.MitbbsThreadDetail;
 import org.jsoup.Jsoup;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
@@ -32,7 +33,7 @@ public class MitbbsparserApplicationTests {
 
 	@Test
 	public void test() {
-		for (String s : HTMLParser.docMap.values()) {
+		for (String s : parser.getDocMap().values()) {
 			System.out.println(parser.parseURLForPage(s));
 		}
 	}
@@ -44,8 +45,8 @@ public class MitbbsparserApplicationTests {
 
 	@Test
 	public void testChannelParser(){
-		ChannelParser p = new ChannelParser();
 		List<MitbbsChannel> result = channelParser.getAllChannel();
 		result.stream().forEach(i-> System.out.println(i));
 	}
+
 }

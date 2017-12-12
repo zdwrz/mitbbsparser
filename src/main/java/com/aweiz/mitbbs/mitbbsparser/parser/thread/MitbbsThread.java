@@ -1,4 +1,4 @@
-package com.aweiz.mitbbs.mitbbsparser.parser;
+package com.aweiz.mitbbs.mitbbsparser.parser.thread;
 
 public class MitbbsThread {
     private String title;

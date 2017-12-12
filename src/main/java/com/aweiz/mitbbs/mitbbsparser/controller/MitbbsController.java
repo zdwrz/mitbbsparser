@@ -1,6 +1,8 @@
 package com.aweiz.mitbbs.mitbbsparser.controller;
 
 import com.aweiz.mitbbs.mitbbsparser.parser.*;
+import com.aweiz.mitbbs.mitbbsparser.parser.thread.MitbbsThread;
+import com.aweiz.mitbbs.mitbbsparser.parser.thread.MitbbsThreadDetail;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,14 +31,27 @@ public class MitbbsController {
     @Autowired
     ChannelParser channelParser;
 
+
+    @GetMapping("/channel")
+    public List<MitbbsChannel> getChannelRank(){
+        return channelParser.getAllChannel();
+    }
+
     @GetMapping("/channel/{name}")
     public MitbbsPage getPage(@PathVariable String name) {
         return parser.parseNameForPage(name);
     }
 
-    @GetMapping("/url")
+    @GetMapping("/channel/url")
     public MitbbsPage getPageByUrl(@RequestParam String addr) {
         return parser.parseURLForPage(addr);
+    }
+
+    @GetMapping("/channel/refresh")
+    public Map<String,String> refreshChannelRank(){
+        Map<String, String> result = new HashMap<>();
+        parser.init();
+        return parser.getDocMap();
     }
 
     @GetMapping("/top")
@@ -44,9 +59,9 @@ public class MitbbsController {
         return xmlParser.getTop();
     }
 
-    @GetMapping("/channel")
-    public List<MitbbsChannel> getChannelRank(){
-        return channelParser.getAllChannel();
+    @GetMapping("/thread")
+    public MitbbsThreadDetail getThreadByUrl(@RequestParam String addr) {
+        return parser.getThreadDetail(addr);
     }
 
     @ExceptionHandler(Exception.class)
