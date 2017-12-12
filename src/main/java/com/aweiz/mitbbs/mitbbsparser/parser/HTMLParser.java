@@ -22,6 +22,7 @@ public class HTMLParser {
 
     @Autowired
     private ChannelParser channelParser;
+
     public static Map<String, String> docMap = new HashMap<>();
 
     @PostConstruct
@@ -31,6 +32,7 @@ public class HTMLParser {
             docMap.put(channel.getName(), channel.getUrl());
         }
     }
+
     public MitbbsPage parseURLForPage(String url) {
         MitbbsPage page = new MitbbsPage();
         List<MitbbsThread> threads = new ArrayList<>(100);
@@ -59,19 +61,19 @@ public class HTMLParser {
 
         Elements next = e.nextAll("tr");   //All thread TR
         for (Element n : next) {
-            Element linkA = n.select("a[href]").first();//Get the first a tag which is the link
+            Element linkA = n.select("a[class='news1']").first();//Get the first a tag which is the link
             MitbbsThread newThread = new MitbbsThread();
             newThread.setTitle(linkA.text());
             newThread.setUrl(BASE_URL + linkA.attr("href"));
             threads.add(newThread);
 
-            Elements linkAs = n.select("a[href]");      //Get rest of the a tag which are author and updater
-            if(linkAs.size() > 1) {
-                Element auth = linkAs.get(1);
+            Elements linkAs = n.select("a[class='news']");      //Get rest of the a tag which are author and updater
+            if(linkAs.size() > 0) {
+                Element auth = linkAs.get(0);
                 newThread.setCreatedBy(auth.text());
                 newThread.setTimeCreated(auth.parent().getElementsByTag("span").first().text()); // time created span
-                if (linkAs.size() == 3) {//have updater
-                    Element updater = linkAs.get(2);
+                if (linkAs.size() == 2) {//have updater
+                    Element updater = linkAs.get(1);
                     newThread.setUpdatedBy(updater.text());
                     newThread.setTimeUpdated(updater.parent().getElementsByTag("span").first().text()); // time updated span
                 }
